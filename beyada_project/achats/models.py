@@ -1,0 +1,21 @@
+from django.db import models
+
+# Create your models here.
+
+
+class Achats(models.Model):
+    batiment = models.ForeignKey('base.Batiment', on_delete=models.PROTECT)
+    quantity = models.IntegerField(default=0)
+    poids_plateau = models.FloatField(default=0, null=False, blank=False)
+    pu = models.FloatField(default=0, null=False, blank=False)
+    date = models.DateField(auto_now=True)
+    CLASSES = (
+        (1, "normal"),
+        (2, "double jaune"),
+        (3, "blanc"),
+        (4, "sale"),
+        (5, "casse"),
+        (6, "elimine"),
+        (7, "triage"),
+    )
+    classe = models.IntegerField(choices=CLASSES, default=1)
