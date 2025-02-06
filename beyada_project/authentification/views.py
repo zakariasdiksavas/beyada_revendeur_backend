@@ -31,7 +31,7 @@ def register_user(request):
         user_ext_data = {
             "user": user_serializer.data.get("id"),
             "eleveur": request.user.userext.eleveur.id,
-            "fournisseur": request.data.get("fournisseurs"),
+            "fournisseurs": request.data.get("fournisseurs"),
             "phone": request.data.get("phone"),
             }
         user_ext_serializer = UserExtSerializer(data=user_ext_data)

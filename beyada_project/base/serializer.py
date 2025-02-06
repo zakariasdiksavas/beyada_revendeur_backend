@@ -5,13 +5,13 @@ from .models import Fournisseur, Site, Batiment, Client
 class FournisseurSerializer(serializers.ModelSerializer):
     class Meta:
         model = Fournisseur
-        fields = ("id", "name", "address", "phone","email", "user")
+        fields = ("id", "name", "address", "phone","email", "revendeur")
 
 class SiteSerializer(serializers.ModelSerializer):
     fournisseur_name = serializers.CharField(source="fournisseur.name", read_only=True)
     class Meta:
         model = Site
-        fields = ("id", "name", "address", "phone","fournisseur", "fournisseur_name")
+        fields = ("id", "name", "address", "phone","fournisseur", "revendeur", "fournisseur_name")
 
 class BatimentSerializer(serializers.ModelSerializer):
     class Meta:
@@ -22,7 +22,7 @@ class BatimentSerializer(serializers.ModelSerializer):
 class ClientSerializer(serializers.ModelSerializer):
     class Meta:
         model = Client
-        fields = ("id", "name", "user", "address", "phone", "email", "is_passager", "is_active")
+        fields = ("id", "name", "address", "phone", "email", "is_passager", "is_active", "revendeur")
 
 
 

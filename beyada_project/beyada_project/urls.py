@@ -24,6 +24,11 @@ urlpatterns = [
     path('v1/admin/', admin.site.urls),
     path('v1/auth/', include('authentification.urls')),
     path('v1/base/', include('base.urls')),
+    path('v1/achat/', include('achats.urls')),
+    path('v1/vente/', include('ventes.urls')),
+    path('v1/paiment/', include('paiments.urls')),
+
+
 
     path('v1/swagger/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
 

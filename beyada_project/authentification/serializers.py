@@ -5,7 +5,7 @@ from .models import UserExt
 class UserExtSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserExt
-        fields = ['user', 'phone']
+        fields = ['user', 'phone', 'fournisseur']
     
 
 class UserSerializer(serializers.ModelSerializer):

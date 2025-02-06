@@ -1,16 +1,26 @@
 from django.db import models
 from simple_history.models import HistoricalRecords
-from authentification.models import UserExt
 
 # Create your models here.
 
-class Fournisseur(models.Model):
+class Revendeur(models.Model):
 
     name = models.CharField(max_length=100)
     address = models.CharField(max_length=200, null=True, blank=True)
     phone = models.CharField(max_length=20, null=True, blank=True)
     email = models.EmailField(null=True, blank=True)
-    user = models.ForeignKey(UserExt, on_delete=models.CASCADE, related_name="userext")
+    history = HistoricalRecords()
+    
+    def __str__(self):
+        return self.name
+
+class Fournisseur(models.Model):
+
+    revendeur = models.ForeignKey(Revendeur, on_delete=models.CASCADE)
+    name = models.CharField(max_length=100)
+    address = models.CharField(max_length=200, null=True, blank=True)
+    phone = models.CharField(max_length=20, null=True, blank=True)
+    email = models.EmailField(null=True, blank=True)
     history = HistoricalRecords()
     
     def __str__(self):
@@ -19,6 +29,7 @@ class Fournisseur(models.Model):
 
 class Site(models.Model):
 
+    revendeur = models.ForeignKey(Revendeur, on_delete=models.CASCADE, blank=True, null=True)
     name = models.CharField(max_length=50)
     address = models.CharField(max_length=200, null=True, blank=True)
     phone = models.CharField(max_length=20, null=True, blank=True)
@@ -41,8 +52,8 @@ class Batiment(models.Model):
     
 class Client(models.Model):
 
+    revendeur = models.ForeignKey(Revendeur, on_delete=models.CASCADE, blank=True, null=True)
     name = models.CharField(max_length=100)
-    user = models.ForeignKey(UserExt, related_name="clients", on_delete=models.CASCADE)
     address = models.CharField(max_length=200, null=True, blank=True)
     phone = models.CharField(max_length=20, null=True, blank=True)
     email = models.EmailField(null=True, blank=True)

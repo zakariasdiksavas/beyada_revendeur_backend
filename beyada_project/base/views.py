@@ -5,7 +5,7 @@ from rest_framework.permissions import IsAuthenticated
 from .serializer import FournisseurSerializer, SiteSerializer,BatimentSerializer,ClientSerializer,ClientSelectSerializer
 from .models import Fournisseur, Site, Batiment, Client
 from django.shortcuts import get_object_or_404
-from authentification.getters import get_fournisseur_by_user, get_batiments_by_user
+from authentification.getters import get_fournisseur_by_user, get_batiments_by_user, get_site_by_user
 # Create your views here.
 
 # ============= TODO FOURNISSEUR ==============
@@ -19,10 +19,9 @@ def create_fournisseur(request):
     address -- str (optional, max_length=200)
     phone -- str (optional, max_length=20)
     email -- str (optional)
-    user -- int (required)
     """
     data = request.data.copy()
-    data['user'] = request.user.userext.id
+    data['revendeur'] = request.user.userext.revendeur.id
     serializer = FournisseurSerializer(data=data)
     if serializer.is_valid():
         serializer.save()
@@ -40,10 +39,9 @@ def update_fournisseur(request):
     address -- str (optional, max_length=200)
     phone -- str (optional, max_length=20)
     email -- str (optional)
-    user -- int (required)
     """
     data = request.data.copy()
-    data['user'] = request.user.userext.id
+    data['revendeur'] = request.user.userext.revendeur.id
     fournisseur = get_object_or_404(Fournisseur, pk=data['id'])
     serializer = FournisseurSerializer(fournisseur, data=data, partial=True)
     if serializer.is_valid():
@@ -66,7 +64,7 @@ def delete_fournisseur(request):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def list_fournisseur(request):
-    fournisseurs = Fournisseur.objects.filter(user=request.user.id)
+    fournisseurs = Fournisseur.objects.filter(revendeur=request.user.userext.revendeur)
     serializer = FournisseurSerializer(fournisseurs, many=True)
     return Response(serializer.data)
 
@@ -84,9 +82,12 @@ def create_site(request):
     """
     # TODO Check if the fournisseur id related to the fournisseur
     fournisseurs = [fournisseur['id'] for fournisseur in get_fournisseur_by_user(request)]
-    if not request.data['fournisseur'] in fournisseurs:
+
+    if not request.data.get('fournisseur', -1) in fournisseurs:
         return Response({'error': "You are not able to add a site with this fournisseur"}, status=status.HTTP_401_UNAUTHORIZED)
-    serializer = SiteSerializer(data=request.data)
+    data = request.data.copy()
+    data['revendeur'] = request.user.userext.revendeur.id
+    serializer = SiteSerializer(data=data)
     if serializer.is_valid():
         serializer.save()
         return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -109,7 +110,9 @@ def update_site(request):
     if not request.data['fournisseur'] in fournisseurs:
         return Response({'error': "You are not able to add a site with this fournisseur"}, status=status.HTTP_401_UNAUTHORIZED)
     site = get_object_or_404(Site, pk=request.data['id'])
-    serializer = SiteSerializer(site, data=request.data, partial=True)
+    data = request.data.copy()
+    data['revendeur'] = request.user.userext.revendeur
+    serializer = SiteSerializer(site, data=data, partial=True)
     if serializer.is_valid():
         serializer.save()
         return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -130,7 +133,7 @@ def delete_site(request):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def list_site(request):
-    site = Site.objects.prefetch_related('fournisseur').filter(fournisseur__user=request.user.id)
+    site = Site.objects.prefetch_related('fournisseur').filter(revendeur=request.user.userext.revendeur.id)
     serializer = SiteSerializer(site, many=True)
     return Response(serializer.data)
 
@@ -144,16 +147,15 @@ def create_batiment(request):
     site -- int (required)
     name -- str (required, max_length=100)
     """
-    return Response(get_batiments_by_user(request))
-    # # TODO Check if the batiment id related to the site
-    # sites = [fournisseur['site__id'] for fournisseur in get_fournisseur_by_user(request)]
-    # if not request.data['site'] in sites:
-    #     return Response({'error': "You are not able to add a batiment with this site"}, status=status.HTTP_401_UNAUTHORIZED)
-    # serializer = BatimentSerializer(data=request.data)
-    # if serializer.is_valid():
-    #     serializer.save()
-    #     return Response(serializer.data, status=status.HTTP_201_CREATED)
-    # return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    # TODO Check if the batiment id related to the site
+    sites = [fournisseur['id'] for fournisseur in get_site_by_user(request)]
+    if not request.data['site'] in sites:
+        return Response({'error': "You are not able to add a batiment with this site"}, status=status.HTTP_401_UNAUTHORIZED)
+    serializer = BatimentSerializer(data=request.data)
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 # TODO Update batiment
@@ -166,7 +168,7 @@ def update_batiment(request):
     name -- str (required, max_length=100)
     """
      # TODO Check if the batiment id related to the site
-    sites = [fournisseur['site__id'] for fournisseur in get_fournisseur_by_user(request)]
+    sites = [fournisseur['id'] for fournisseur in get_site_by_user(request)]
     if not request.data['site'] in sites:
         return Response({'error': "You are not able to add a batiment with this site"}, status=status.HTTP_401_UNAUTHORIZED)
     batiment = get_object_or_404(Batiment, pk=request.data['id'])
@@ -191,7 +193,7 @@ def delete_batiment(request):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def list_batiment(request):
-    sites = [fournisseur['site__id'] for fournisseur in get_fournisseur_by_user(request)]
+    sites = [fournisseur['id'] for fournisseur in get_site_by_user(request)]
     batiments = Batiment.objects.select_related('site').filter(site__in=sites)
     serializer = BatimentSerializer(batiments, many=True)
     return Response(serializer.data)
@@ -211,7 +213,7 @@ def create_client(request):
     is_active -- bool (default=True)
     """
     data = request.data.copy()
-    data['user'] = request.user.userext.id
+    data['revendeur'] = request.user.userext.revendeur.id
     serializer = ClientSerializer(data=data)
     if serializer.is_valid():
         serializer.save()
@@ -233,7 +235,7 @@ def update_client(request):
     is_active -- bool (default=True)
     """
     data = request.data.copy()
-    data['user'] = request.user.userext.id
+    data['revendeur'] = request.user.userext.revendeur.id
     client = get_object_or_404(Client, pk=data['id'])
     serializer = ClientSerializer(client, data=data, partial=True)
     if serializer.is_valid():
@@ -256,7 +258,7 @@ def delete_client(request):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def list_client(request):
-    client = Client.objects.filter(user=request.user.id)
+    client = Client.objects.filter(revendeur=request.user.userext.revendeur.id)
     serializer = ClientSerializer(client, many=True)
     return Response(serializer.data)
 
