@@ -3,7 +3,7 @@ from simple_history.models import HistoricalRecords
 
 # Create your models here.
 
-class PaimentByVente(models.Model):
+class Paiment(models.Model):
     client_vente = models.ForeignKey('base.Client', on_delete=models.PROTECT, related_name='client_vente', null=True, blank=True)
     client_client = models.ForeignKey('base.Client', on_delete=models.PROTECT, related_name='client_client', null=True, blank=True)
     vente = models.ForeignKey('ventes.Ventes', on_delete=models.PROTECT, null=True, blank=True)
@@ -25,8 +25,8 @@ class PaimentByVente(models.Model):
     history = HistoricalRecords()
 
 
-# class PaiementProof(models.Model):
-#     paiement_try = models.ForeignKey(PaimentByVente, related_name='proofs', on_delete=models.CASCADE)
-#     file = models.ImageField(upload_to='uploads/paiements/proofs/')
-#     history = HistoricalRecords()
+class PaiementProof(models.Model):
+    paiment = models.ForeignKey(Paiment, related_name='paiment', on_delete=models.CASCADE)
+    file = models.ImageField(upload_to='uploads/paiements/proofs/')
+    history = HistoricalRecords()
     

@@ -10,7 +10,7 @@ class Ventes(models.Model):
     quantity = models.IntegerField(default=0)
     poids_plateau = models.FloatField(default=0, null=False, blank=False)
     pu = models.FloatField(default=0, null=False, blank=False)
-    date = models.DateField(auto_now=True)
+    date = models.DateTimeField(auto_now=True)
     CLASSES = (
         (1, "normal"),
         (2, "double jaune"),
