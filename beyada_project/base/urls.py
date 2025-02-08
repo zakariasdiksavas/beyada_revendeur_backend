@@ -25,5 +25,4 @@ urlpatterns = [
 
     path('list-select-data', views.get_select_data),
     path('list-select-client', views.get_select_client),
-
 ]

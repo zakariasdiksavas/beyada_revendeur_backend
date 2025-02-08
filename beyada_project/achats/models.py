@@ -1,6 +1,7 @@
 from django.db import models
 from simple_history.models import HistoricalRecords
-
+from datetime import datetime
+from django.utils import timezone
 # Create your models here.
 
 
@@ -9,7 +10,7 @@ class Achats(models.Model):
     quantity = models.IntegerField(default=0)
     poids_plateau = models.FloatField(default=0, null=False, blank=False)
     pu = models.FloatField(default=0, null=False, blank=False)
-    date = models.DateField(auto_now=True)
+    date = models.DateField(default=timezone.now)
     CLASSES = (
         (1, "normal"),
         (2, "double jaune"),

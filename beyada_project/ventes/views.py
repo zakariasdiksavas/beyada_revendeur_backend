@@ -6,6 +6,8 @@ from .serializer import VenteSerializer
 from .models import Ventes
 from django.shortcuts import get_object_or_404
 from authentification.getters import get_batiments_by_user, get_clients_by_user
+from django.db.models import Q
+
 
 # Create your views here.
 
@@ -79,11 +81,55 @@ def delete_vente(request):
     vente.delete()
     return Response(status=status.HTTP_204_NO_CONTENT)
 
-# TODO List vente
+# # TODO List vente
+# @api_view(['GET'])
+# @permission_classes([IsAuthenticated])
+# def list_vente(request):
+#     batiments = [batiment['batiments__id'] for batiment in get_batiments_by_user(request)]
+#     ventes = Ventes.objects.select_related('batiment', 'batiment__site', 'client').filter(batiment__in=batiments)
+#     serializer = VenteSerializer(ventes, many=True)
+#     return Response(serializer.data)
+
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def list_vente(request):
+    """
+    id -- int 
+    batiment -- int
+    client -- int
+    date1 -- date
+    date2 -- date
+    """
+    filter = Q()
+    params = request.query_params
+    page_number = 2
+    isInitial = True # todo Check if this is the initial request
+    is_last = True # todo Check in pagination if this is the last item
     batiments = [batiment['batiments__id'] for batiment in get_batiments_by_user(request)]
-    ventes = Ventes.objects.select_related('batiment', 'batiment__site', 'client').filter(batiment__in=batiments)
+    ventes = Ventes.objects.select_related('batiment', 'batiment__site', 'client')
+    # TODO Filter data
+    if params.get('batiment', None):
+        isInitial = False
+        batiments = [batiment for batiment in batiments if batiment == int(params.get('batiment'))]
+    filter = Q(batiment__in=batiments)
+    if params.get('client', None):
+        filter &= Q(client=params.get('client'))
+    if params.get('date1', None) and params.get('date2', None):
+        isInitial = False
+        filter &= Q(date__range=[params.get('date1'), params.get('date2')])
+    elif params.get('date1', None):
+        isInitial = False
+        filter &= Q(date__gte=params.get('date1'))
+    elif params.get('date2', None):
+        isInitial = False
+        filter &= Q(date__gte=params.get('date2'))
+    if params.get('id', None):
+        isInitial = False
+        filter &= Q(id__lt=params.get('id'))
+    ventes = ventes.filter(filter).order_by('-id')
+    if (isInitial or params.get('id')) and len(ventes) > 0:
+        ventes = ventes[:page_number]
+        if not ventes[len(ventes) - 1].id == Ventes.objects.filter(filter).first().id:
+            is_last = False
     serializer = VenteSerializer(ventes, many=True)
-    return Response(serializer.data)
+    return Response({'data': serializer.data, 'is_last': is_last})
