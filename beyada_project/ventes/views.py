@@ -26,13 +26,13 @@ def create_vente(request):
     classe -- int (optional)
     """
     # TODO Check if the batiment is related to the batiment of the user
-    batiments = [batiment['batiments__id'] for batiment in get_batiments_by_user(request)]
-    if not request.data['batiment'] in batiments:
+    batiments = [batiment['id'] for batiment in get_batiments_by_user(request)]
+    if not request.data.get('batiment', None) in batiments:
         return Response({'error': "You are not able to add a vente with this batiment"}, status=status.HTTP_401_UNAUTHORIZED) 
     
     # TODO Check if the client is related to this user
     clients = [client.id for client in get_clients_by_user(request)]
-    if not request.data['client'] in clients:
+    if not request.data.get('client', None) in clients:
         return Response({'error': "You are not able to add a vente with this client"}, status=status.HTTP_401_UNAUTHORIZED) 
     serializer = VenteSerializer(data=request.data)
     if serializer.is_valid():
@@ -56,12 +56,12 @@ def update_vente(request):
     classe -- int (optional)
     """
     # TODO Check if the batiment is related to the batiment of the user
-    batiments = [batiment['batiments__id'] for batiment in get_batiments_by_user(request)]
-    if not request.data['batiment'] in batiments:
+    batiments = [batiment['id'] for batiment in get_batiments_by_user(request)]
+    if not request.data.get('batiment', None) in batiments:
         return Response({'error': "You are not able to add a vente with this batiment"}, status=status.HTTP_401_UNAUTHORIZED) 
     # TODO Check if the client is related to this user
     clients = [client.id for client in get_clients_by_user(request)]
-    if not request.data['client'] in clients:
+    if not request.data.get('client', None) in clients:
         return Response({'error': "You are not able to add a vente with this client"}, status=status.HTTP_401_UNAUTHORIZED) 
     vente = get_object_or_404(Ventes, pk=request.data['id'])
     serializer = VenteSerializer(vente, data=request.data, partial=True)
@@ -81,14 +81,7 @@ def delete_vente(request):
     vente.delete()
     return Response(status=status.HTTP_204_NO_CONTENT)
 
-# # TODO List vente
-# @api_view(['GET'])
-# @permission_classes([IsAuthenticated])
-# def list_vente(request):
-#     batiments = [batiment['batiments__id'] for batiment in get_batiments_by_user(request)]
-#     ventes = Ventes.objects.select_related('batiment', 'batiment__site', 'client').filter(batiment__in=batiments)
-#     serializer = VenteSerializer(ventes, many=True)
-#     return Response(serializer.data)
+# TODO List vente
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
@@ -105,7 +98,7 @@ def list_vente(request):
     page_number = 2
     isInitial = True # todo Check if this is the initial request
     is_last = True # todo Check in pagination if this is the last item
-    batiments = [batiment['batiments__id'] for batiment in get_batiments_by_user(request)]
+    batiments = [batiment['id'] for batiment in get_batiments_by_user(request)]
     ventes = Ventes.objects.select_related('batiment', 'batiment__site', 'client')
     # TODO Filter data
     if params.get('batiment', None):

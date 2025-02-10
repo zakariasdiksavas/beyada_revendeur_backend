@@ -11,7 +11,7 @@ class SiteSerializer(serializers.ModelSerializer):
     fournisseur_name = serializers.CharField(source="fournisseur.name", read_only=True)
     class Meta:
         model = Site
-        fields = ("id", "name", "address", "phone","fournisseur", "revendeur", "fournisseur_name")
+        fields = ("id", "name", "address", "phone","fournisseur",  "fournisseur_name")
 
 class BatimentSerializer(serializers.ModelSerializer):
     class Meta:

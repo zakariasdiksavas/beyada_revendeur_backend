@@ -5,7 +5,7 @@ from rest_framework.permissions import IsAuthenticated
 from .serializer import FournisseurSerializer, SiteSerializer,BatimentSerializer,ClientSerializer,ClientSelectSerializer
 from .models import Fournisseur, Site, Batiment, Client
 from django.shortcuts import get_object_or_404
-from authentification.getters import get_fournisseur_by_user, get_batiments_by_user, get_site_by_user
+from authentification.getters import get_fournisseur_by_user, get_site_by_user
 # Create your views here.
 
 # ============= TODO FOURNISSEUR ==============
@@ -86,7 +86,6 @@ def create_site(request):
     if not request.data.get('fournisseur', -1) in fournisseurs:
         return Response({'error': "You are not able to add a site with this fournisseur"}, status=status.HTTP_401_UNAUTHORIZED)
     data = request.data.copy()
-    data['revendeur'] = request.user.userext.revendeur.id
     serializer = SiteSerializer(data=data)
     if serializer.is_valid():
         serializer.save()
@@ -111,7 +110,6 @@ def update_site(request):
         return Response({'error': "You are not able to add a site with this fournisseur"}, status=status.HTTP_401_UNAUTHORIZED)
     site = get_object_or_404(Site, pk=request.data['id'])
     data = request.data.copy()
-    data['revendeur'] = request.user.userext.revendeur
     serializer = SiteSerializer(site, data=data, partial=True)
     if serializer.is_valid():
         serializer.save()
@@ -133,7 +131,7 @@ def delete_site(request):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def list_site(request):
-    site = Site.objects.prefetch_related('fournisseur').filter(revendeur=request.user.userext.revendeur.id)
+    site = Site.objects.prefetch_related('fournisseur').filter(fournisseur__revendeur=request.user.userext.revendeur.id)
     serializer = SiteSerializer(site, many=True)
     return Response(serializer.data)
 

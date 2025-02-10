@@ -5,7 +5,7 @@ from simple_history.models import HistoricalRecords
 
 
 class Ventes(models.Model):
-    batiment = models.ForeignKey('base.Batiment', on_delete=models.PROTECT)
+    batiment = models.ForeignKey('base.Batiment', on_delete=models.PROTECT, db_index=True)
     client = models.ForeignKey('base.Client', on_delete=models.PROTECT)
     quantity = models.IntegerField(default=0)
     poids_plateau = models.FloatField(default=0, null=False, blank=False)

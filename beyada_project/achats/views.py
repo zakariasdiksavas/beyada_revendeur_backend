@@ -4,9 +4,12 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from .serializer import AchatSerializer
 from .models import Achats
+from ventes.models import Ventes
 from django.shortcuts import get_object_or_404
 from authentification.getters import get_batiments_by_user
 from django.db.models import Q
+from django.db.models import Sum
+
 
 # Create your views here.
 
@@ -24,7 +27,7 @@ def create_achat(request):
     classe -- int (optional)
     """
     # TODO Check if the batiment is related to the batiment of the user
-    batiments = [batiment['batiments__id'] for batiment in get_batiments_by_user(request)]
+    batiments = [batiment['id'] for batiment in get_batiments_by_user(request)]
     if not request.data['batiment'] in batiments:
         return Response({'error': "You are not able to add a achat with this batiment"}, status=status.HTTP_401_UNAUTHORIZED) 
     serializer = AchatSerializer(data=request.data)
@@ -48,7 +51,7 @@ def update_achat(request):
     classe -- int (optional)
     """
     # TODO Check if the batiment is related to the batiment of the user
-    batiments = [batiment['batiments__id'] for batiment in get_batiments_by_user(request)]
+    batiments = [batiment['id'] for batiment in get_batiments_by_user(request)]
     if not request.data['batiment'] in batiments:
         return Response({'error': "You are not able to add a achat with this batiment"}, status=status.HTTP_401_UNAUTHORIZED) 
     achat = get_object_or_404(Achats, pk=request.data['id'])
@@ -84,7 +87,7 @@ def list_achat(request):
     page_number = 10
     isInitial = True # todo Check if this is the initial request
     is_last = True # todo Check in pagination if this is the last item
-    batiments = [batiment['batiments__id'] for batiment in get_batiments_by_user(request)]
+    batiments = [batiment['id'] for batiment in get_batiments_by_user(request)]
     achats = Achats.objects.select_related('batiment', 'batiment__site')
     # TODO Filter data
     if params.get('batiment', None):
@@ -110,3 +113,31 @@ def list_achat(request):
             is_last = False
     serializer = AchatSerializer(achats, many=True)
     return Response({'data': serializer.data, 'is_last': is_last})
+
+
+# TODO ===================== Calcul stock ====================
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_stock(request):
+    # TODO List classe
+    list_classe = {
+        1: "normal",
+        2: "double_jaune",
+        3: "blanc",
+        4: "sale",
+        5: "casse",
+        6: "elimine",
+        7: "triage",
+    }
+    # TODO Get list batiment related to this user
+    batiments = [batiment['id'] for batiment in get_batiments_by_user(request)]
+    # TODO Get sum quantity of each class in achat and vente
+    achats = Achats.objects.filter(batiment__in=batiments).values('classe').annotate(sum=Sum('quantity'))
+    ventes = Ventes.objects.filter(batiment__in=batiments).values('classe').annotate(sum=Sum('quantity'))
+    # TODO Transfer data into dictionnary
+    achats_dict = {list_classe[achat['classe']]: achat['sum'] or 0 for achat in achats}
+    ventes_dict = {list_classe[vente['classe']]: vente['sum'] or 0 for vente in ventes}
+
+    stock = {list_classe[key] : achats_dict.get(list_classe[key], 0) - ventes_dict.get(list_classe[key], 0) for key in list_classe}
+    return Response(stock)

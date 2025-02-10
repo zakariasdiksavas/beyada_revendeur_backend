@@ -29,11 +29,11 @@ class Fournisseur(models.Model):
 
 class Site(models.Model):
 
-    revendeur = models.ForeignKey(Revendeur, on_delete=models.CASCADE, blank=True, null=True)
+    # revendeur = models.ForeignKey(Revendeur, on_delete=models.CASCADE, blank=True, null=True)
+    fournisseur = models.ForeignKey(Fournisseur, on_delete=models.CASCADE, related_name='site')
     name = models.CharField(max_length=50)
     address = models.CharField(max_length=200, null=True, blank=True)
     phone = models.CharField(max_length=20, null=True, blank=True)
-    fournisseur = models.ForeignKey(Fournisseur, on_delete=models.CASCADE, related_name='site')
     history = HistoricalRecords()
     
     def __str__(self):

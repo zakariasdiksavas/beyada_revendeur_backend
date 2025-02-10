@@ -6,4 +6,6 @@ urlpatterns = [
     path('update-achat', views.update_achat),
     path('delete-achat', views.delete_achat),
     path('list-achat', views.list_achat),
+
+    path('get-stock', views.get_stock)
 ]
